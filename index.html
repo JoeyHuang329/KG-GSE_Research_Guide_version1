@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>知識圖譜驅動之約束生成：研究方法導讀</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Lora:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #0f1e3c;
+    --navy-mid: #1a3060;
+    --gold: #b8893a;
+    --gold-light: #d4a84b;
+    --cream: #faf8f3;
+    --warm-white: #fffef9;
+    --text-dark: #1c1c2e;
+    --text-mid: #3a3a52;
+    --text-muted: #7a7a96;
+    --accent-red: #c0392b;
+    --accent-teal: #0d7377;
+    --border: #e8e4d8;
+    --border-mid: #d0c9bb;
+    --highlight-bg: #f5f0e5;
+    --code-bg: #1e1e2e;
+    --code-text: #cdd6f4;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Lora', Georgia, serif;
+    background: var(--cream);
+    color: var(--text-dark);
+    line-height: 1.85;
+    font-size: 16.5px;
+  }
+
+  /* ─── COVER ─── */
+  .cover {
+    background: var(--navy);
+    color: #fff;
+    padding: 80px 60px 70px;
+    position: relative;
+    overflow: hidden;
+  }
+  .cover::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -60px;
+    width: 420px; height: 420px;
+    border-radius: 50%;
+    border: 1px solid rgba(184,137,58,0.2);
+  }
+  .cover::after {
+    content: '';
+    position: absolute;
+    top: 30px; right: 20px;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    border: 1px solid rgba(184,137,58,0.15);
+  }
+  .cover-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    color: var(--gold-light);
+    text-transform: uppercase;
+    margin-bottom: 28px;
+  }
+  .cover h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 38px;
+    font-weight: 700;
+    line-height: 1.25;
+    color: #fff;
+    max-width: 680px;
+    margin-bottom: 14px;
+  }
+  .cover h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    font-weight: 400;
+    color: rgba(255,255,255,0.65);
+    margin-bottom: 42px;
+    font-style: italic;
+  }
+  .cover-meta {
+    border-top: 1px solid rgba(255,255,255,0.15);
+    padding-top: 28px;
+    display: flex;
+    gap: 48px;
+    flex-wrap: wrap;
+  }
+  .cover-meta-block { }
+  .cover-meta-block .label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: rgba(255,255,255,0.45);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .cover-meta-block .value {
+    font-family: 'Lora', serif;
+    font-size: 14px;
+    color: rgba(255,255,255,0.85);
+    line-height: 1.6;
+  }
+  .keywords {
+    margin-top: 36px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .keyword {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    padding: 5px 14px;
+    border: 1px solid rgba(184,137,58,0.4);
+    border-radius: 20px;
+    color: var(--gold-light);
+    letter-spacing: 0.04em;
+  }
+
+  /* ─── TOC ─── */
+  .toc {
+    background: var(--navy-mid);
+    color: #fff;
+    padding: 40px 60px;
+    border-bottom: 3px solid var(--gold);
+  }
+  .toc h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 14px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--gold-light);
+    margin-bottom: 20px;
+  }
+  .toc ol {
+    columns: 2;
+    column-gap: 48px;
+    list-style: none;
+    counter-reset: toc;
+  }
+  .toc li {
+    counter-increment: toc;
+    margin-bottom: 10px;
+    break-inside: avoid;
+    font-family: 'Lora', serif;
+    font-size: 14.5px;
+    line-height: 1.4;
+  }
+  .toc li::before {
+    content: counter(toc) ". ";
+    color: var(--gold-light);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    margin-right: 4px;
+  }
+  .toc a {
+    color: rgba(255,255,255,0.8);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .toc a:hover { color: var(--gold-light); }
+
+  /* ─── LAYOUT ─── */
+  .content-wrap {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 0 48px 80px;
+  }
+
+  /* ─── SECTION ─── */
+  .section {
+    padding-top: 60px;
+    border-top: 1px solid var(--border);
+    margin-top: 60px;
+  }
+  .section:first-child { border-top: none; margin-top: 48px; }
+
+  .section-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--gold);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .section h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--navy);
+    line-height: 1.3;
+    margin-bottom: 24px;
+  }
+  .section h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--navy-mid);
+    margin-top: 40px;
+    margin-bottom: 14px;
+    padding-left: 16px;
+    border-left: 3px solid var(--gold);
+  }
+  .section h4 {
+    font-family: 'Playfair Display', serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-mid);
+    margin-top: 28px;
+    margin-bottom: 10px;
+  }
+
+  p { margin-bottom: 18px; }
+
+  /* ─── CALLOUT BOXES ─── */
+  .callout {
+    padding: 20px 24px;
+    border-radius: 6px;
+    margin: 28px 0;
+    position: relative;
+  }
+  .callout-icon {
+    font-size: 20px;
+    margin-bottom: 8px;
+    display: block;
+  }
+  .callout.analogy {
+    background: #f0f4ff;
+    border-left: 4px solid #4a6fa5;
+  }
+  .callout.analogy .callout-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: #4a6fa5;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    font-weight: 500;
+  }
+  .callout.key {
+    background: #fdf6e9;
+    border-left: 4px solid var(--gold);
+  }
+  .callout.key .callout-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    font-weight: 500;
+  }
+  .callout.warning {
+    background: #fff5f5;
+    border-left: 4px solid #c0392b;
+  }
+  .callout.warning .callout-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: #c0392b;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    font-weight: 500;
+  }
+  .callout.teal {
+    background: #e8f5f5;
+    border-left: 4px solid var(--accent-teal);
+  }
+  .callout.teal .callout-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--accent-teal);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    font-weight: 500;
+  }
+
+  /* ─── FORMULA ─── */
+  .formula-block {
+    background: var(--code-bg);
+    border-radius: 8px;
+    padding: 20px 28px;
+    margin: 24px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: var(--code-text);
+    overflow-x: auto;
+    line-height: 1.7;
+    position: relative;
+  }
+  .formula-label {
+    position: absolute;
+    top: 10px; right: 14px;
+    font-size: 10px;
+    color: rgba(255,255,255,0.3);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .formula-block .comment { color: #6c7086; }
+  .formula-block .hl { color: #f9e2af; }
+  .formula-block .hl2 { color: #89dceb; }
+  .formula-block .hl3 { color: #a6e3a1; }
+
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13.5px;
+    background: #ede9de;
+    padding: 2px 7px;
+    border-radius: 3px;
+    color: #5a3e1b;
+  }
+
+  /* ─── DIAGRAM CONTAINERS ─── */
+  .diagram-wrap {
+    margin: 36px 0;
+    background: var(--warm-white);
+    border: 1px solid var(--border-mid);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .diagram-caption {
+    padding: 12px 20px;
+    background: #f0ede4;
+    border-top: 1px solid var(--border);
+    font-size: 13.5px;
+    color: var(--text-muted);
+    font-style: italic;
+    line-height: 1.5;
+  }
+  .diagram-caption strong {
+    color: var(--text-mid);
+    font-style: normal;
+  }
+
+  svg { display: block; }
+
+  /* ─── COMPARISON TABLE ─── */
+  .compare-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 24px 0;
+    font-size: 15px;
+  }
+  .compare-table th {
+    background: var(--navy);
+    color: #fff;
+    padding: 12px 18px;
+    text-align: left;
+    font-family: 'Playfair Display', serif;
+    font-weight: 600;
+    font-size: 15px;
+  }
+  .compare-table td {
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  .compare-table tr:nth-child(even) td { background: var(--highlight-bg); }
+  .compare-table .good { color: #0d7377; font-weight: 500; }
+  .compare-table .bad { color: #c0392b; font-weight: 500; }
+
+  /* ─── RESULTS ─── */
+  .result-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin: 28px 0;
+  }
+  .result-card {
+    background: var(--warm-white);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+  }
+  .result-card .model {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+    letter-spacing: 0.05em;
+  }
+  .result-card .metric {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--navy);
+  }
+  .result-card .metric-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+  .result-card.winner {
+    border: 2px solid var(--gold);
+    background: #fdf8ed;
+  }
+  .result-card.winner .metric { color: var(--gold); }
+  .winner-badge {
+    display: inline-block;
+    background: var(--gold);
+    color: #fff;
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 12px;
+    margin-bottom: 8px;
+  }
+
+  /* ─── STEP LIST ─── */
+  .step-list {
+    list-style: none;
+    counter-reset: steps;
+    margin: 20px 0;
+  }
+  .step-list li {
+    counter-increment: steps;
+    padding: 14px 18px 14px 52px;
+    position: relative;
+    border-left: 2px solid var(--border);
+    margin-bottom: 4px;
+  }
+  .step-list li::before {
+    content: counter(steps);
+    position: absolute;
+    left: 14px;
+    top: 14px;
+    width: 22px;
+    height: 22px;
+    background: var(--navy);
+    color: #fff;
+    border-radius: 50%;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ─── FOOTER ─── */
+  .footer {
+    background: var(--navy);
+    color: rgba(255,255,255,0.5);
+    padding: 28px 60px;
+    font-size: 13px;
+    line-height: 1.6;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.03em;
+  }
+
+  em { font-style: italic; color: var(--text-mid); }
+  strong { font-weight: 500; }
+  .accent { color: var(--gold); font-weight: 500; }
+  .navy { color: var(--navy); font-weight: 600; }
+
+  @media (max-width: 640px) {
+    .cover { padding: 48px 28px; }
+    .cover h1 { font-size: 26px; }
+    .content-wrap { padding: 0 20px 60px; }
+    .toc { padding: 28px; }
+    .toc ol { columns: 1; }
+    .result-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ COVER ═══════════════ -->
+<div class="cover">
+  <div class="cover-tag">國立政治大學 人工智慧應用學士學位學程 ✦ 研究方法導讀</div>
+  <h1>知識圖譜驅動之約束生成<br>如何讓 LLM 良好地理解法律並推論？</h1>
+  <h2>融合幾何圖嵌入與大型語言模型於職業安全法規推論之研究</h2>
+  <div class="cover-meta">
+    <div class="cover-meta-block">
+      <div class="label">研究團隊</div>
+      <div class="value">黃旭寬、陳玟佑、陳柏宇<br>校內115年AI跨域研究補助計畫 入選</div>
+    </div>
+    <div class="cover-meta-block">
+      <div class="label">指導老師</div>
+      <div class="value">創新國際學院 卞中佩老師</div>
+    </div>
+    <div class="cover-meta-block">
+      <div class="label">團隊所屬單位</div>
+      <div class="value">人工智慧應用學士學位學程、傳播學院大一大二不分系、應用數學系、創新國際學院學士班<br></div>
+    </div>
+  </div>
+  <div class="keywords">
+    <span class="keyword">知識圖譜 KG</span>
+    <span class="keyword">知識圖譜嵌入模型 KGE</span>
+    <span class="keyword">關係圖注意力網路 RGAT</span>
+    <span class="keyword">Box Embedding</span>
+    <span class="keyword">Graph Prompting</span>
+    <span class="keyword">LLM 幻覺</span>
+    <span class="keyword">幾何-CoT</span>
+  </div>
+</div>
+
+<!-- ═══════════════ TOC ═══════════════ -->
+<div class="toc">
+  <h3>目錄</h3>
+  <ol>
+    <li><a href="#s1">研究背景：AI 法律顧問的困境</a></li>
+    <li><a href="#s2">核心概念：知識圖譜與圖嵌入</a></li>
+    <li><a href="#s3">核心概念：RGAT 關係圖注意力</a></li>
+    <li><a href="#s4">核心概念：BoxE 幾何空間嵌入</a></li>
+    <li><a href="#s5">方法一：動態異質圖譜張量化</a></li>
+    <li><a href="#s6">方法二：幾何相交體積子圖採樣</a></li>
+    <li><a href="#s7">方法三：圖譜序列化提示生成</a></li>
+    <li><a href="#s8">方法四：幾何引導思維鏈（Geo-CoT）</a></li>
+    <li><a href="#s9">方法五：解碼層幾何懲罰機制</a></li>
+    <li><a href="#s10">新研究計畫的系統架構與前期研究的實驗結果</a></li>
+  </ol>
+</div>
+
+<!-- ═══════════════ CONTENT ═══════════════ -->
+<div class="content-wrap">
+
+<!-- ─── SECTION 1 ─── -->
+<div class="section" id="s1">
+  <div class="section-num">Section 01</div>
+  <h2>研究背景：AI 法律顧問的困境</h2>
+
+  <p>想像有一個工廠發生了工安意外：一名作業員在距地面3公尺的施工架上作業時失足墜落，造成骨折。現在你的任務是：找出雇主違反了哪些《職業安全衛生法》條文。</p>
+
+  <p>這個任務對人類律師而言需要大量的法規知識與推論能力。研究者希望讓大型語言模型（LLM）來扮演這個「職安法務顧問」的角色：<em>輸入事故情境描述，輸出具體涉及的法律條文與違規理由</em>。</p>
+
+  <h3>三個核心痛點</h3>
+
+  <p>在前期研究中，直接使用 LLM 搭配 RAG（Retrieval-Augmented Generation，檢索增強生成）的方法遇到了三個嚴重問題：</p>
+
+  <div class="callout warning">
+    <div class="callout-title">痛點 1 — 語意異質性（Semantic Heterogeneity）</div>
+    <p>同一件事可以用很多種說法描述：「墜落」= 「失足」= 「跌下」；「施工架」= 「高3公尺處」= 「高處作業平台」。向量相似度搜尋容易誤判：這些說法在語意上可以是相似的，向量距離也可能是相似的，但在職業安全災害中，施工架有施工架的規定、高度也有高度的規定、高處作業平台也有高處作業平台的規定：單純只有根據向量相似度可能無法準確找到最關鍵的職業安全法規。</p>
+  </div>
+
+  <div class="callout warning">
+    <div class="callout-title">痛點 2 — 檢索-生成鴻溝（Retrieval-Generation Gap）</div>
+    <p>就算在檢索法規的任務上可以順利，但最終任務是生成，而從檢索到生成的過程中要如何維持關鍵依據不被適配器投影放大後模糊掉是個挑戰。</p>
+  </div>
+
+  <div class="callout warning">
+    <div class="callout-title">痛點 3 — 頻率偏差與通用建議陷阱（Frequency Bias）</div>
+    <p>這跟前期研究所建立的 369 份職業安全災害案例資料集本身的長尾分布有關，也就是「雇主應訂定職業安全衛生管理規範」、「主應加強安全教育訓練」這樣的條文因為出現頻率高，幾乎可以適用於每一種職災案例。LLM 因為預訓練時接觸過太多類似句子，會偏向輸出這類安全牌答案，卻回避了真正重要、案例稀少但精確的法條。</p>
+  </div>
+
+  <div class="callout key">
+    <div class="callout-title">研究核心思路</div>
+    <p><strong>強迫 AI 開口說話前，先做幾何體積的計算 (?)。</strong>不讓模型依賴文字頻率自由發揮，而是用數學嚴格的幾何運算來約束它能說什麼、不能說什麼。</p>
+  </div>
+</div>
+
+<!-- ─── SECTION 2 ─── -->
+<div class="section" id="s2">
+  <div class="section-num">Section 02</div>
+  <h2>核心概念：知識圖譜與圖嵌入</h2>
+
+  <h3>什麼是知識圖譜（Knowledge Graph）？</h3>
+
+  <div class="callout analogy">
+    <div class="callout-title">直觀類比</div>
+    <p>你在 Google 搜尋「全面啟動導演的妻子是誰」，Google 知道答案不需要全文比對——因為它的內部有一張「知識圖譜」，記錄著：<em>（Christopher Nolan, 導演, Inception）</em> 和 <em>（Christopher Nolan, 已婚, Emma Thomas）</em>。這張圖就是一個巨大的「事實關係網路」。</p>
+  </div>
+
+  <p>知識圖譜的基本單位是<strong>三元組（Triplet）</strong>：</p>
+
+  <div class="formula-block">
+    <span class="formula-label">Definition</span>
+    (head, relation, tail)<br>
+    <span class="comment">-- 例：</span><br>
+    <span class="hl">(墜落事件_A,  HAS_CAUSE,  未設安全網)</span><br>
+    <span class="hl2">(未設安全網,  LEADS_TO,   違規項目_B)</span><br>
+    <span class="hl3">(違規項目_B,  VIOLATES,   職安法第18條)</span>
+  </div>
+
+  <p>本研究的職安知識圖譜包含四種節點類型：<em>職災事件（Incident）、直接原因（Cause_Direct）、違規項目（Violation）、法規條文（Regulation）</em>；三種邊的類型：<code>HAS_CAUSE</code>、<code>LEADS_TO</code>、<code>VIOLATES_LAW</code>。</p>
+
+  <div class="diagram-wrap">
+    <svg viewBox="0 0 760 160" xmlns="http://www.w3.org/2000/svg" width="100%">
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </marker>
+      </defs>
+
+      <!-- Node boxes -->
+      <g>
+        <rect x="30" y="55" width="140" height="50" rx="8" fill="#0f1e3c" stroke="#0f1e3c"/>
+        <text x="100" y="76" text-anchor="middle" fill="white" font-family="Lora,serif" font-size="13" font-weight="600">Incident</text>
+        <text x="100" y="95" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-family="JetBrains Mono,monospace" font-size="10">職災事件</text>
+      </g>
+      <g>
+        <rect x="210" y="55" width="150" height="50" rx="8" fill="#1a3060" stroke="#1a3060"/>
+        <text x="285" y="76" text-anchor="middle" fill="white" font-family="Lora,serif" font-size="13" font-weight="600">Cause_Direct</text>
+        <text x="285" y="95" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-family="JetBrains Mono,monospace" font-size="10">直接原因</text>
+      </g>
+      <g>
+        <rect x="400" y="55" width="140" height="50" rx="8" fill="#b8893a" stroke="#b8893a"/>
+        <text x="470" y="76" text-anchor="middle" fill="white" font-family="Lora,serif" font-size="13" font-weight="600">Violation</text>
+        <text x="470" y="95" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-family="JetBrains Mono,monospace" font-size="10">違規項目</text>
+      </g>
+      <g>
+        <rect x="583" y="55" width="150" height="50" rx="8" fill="#0d7377" stroke="#0d7377"/>
+        <text x="658" y="76" text-anchor="middle" fill="white" font-family="Lora,serif" font-size="13" font-weight="600">Regulation</text>
+        <text x="658" y="95" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-family="JetBrains Mono,monospace" font-size="10">法規條文</text>
+      </g>
+
+      <!-- Arrows -->
+      <line x1="172" y1="80" x2="208" y2="80" stroke="#999" stroke-width="1.5" marker-end="url(#arr)"/>
+      <line x1="362" y1="80" x2="398" y2="80" stroke="#999" stroke-width="1.5" marker-end="url(#arr)"/>
+      <line x1="542" y1="80" x2="581" y2="80" stroke="#999" stroke-width="1.5" marker-end="url(#arr)"/>
+
+      <!-- Arrow labels -->
+      <text x="190" y="70" text-anchor="middle" fill="#777" font-family="JetBrains Mono,monospace" font-size="10">HAS_CAUSE</text>
+      <text x="380" y="70" text-anchor="middle" fill="#777" font-family="JetBrains Mono,monospace" font-size="10">LEADS_TO</text>
+      <text x="562" y="70" text-anchor="middle" fill="#777" font-family="JetBrains Mono,monospace" font-size="10">VIOLATES</text>
+    </svg>
+    <div class="diagram-caption"><strong>圖1：職安知識圖譜的節點類型與關係。</strong>四種節點、三種關係形成一張異質有向圖（Heterogeneous Directed Graph）。</div>
+  </div>
+
+  <h3>什麼是圖嵌入（Graph Embedding）？</h3>
+
+  <p>圖嵌入的目標是：<strong>把每一個節點轉換成一個多維向量，讓圖譜中關係越密切的節點，其向量在數學空間中的距離也越近。</strong></p>
+
+  <div class="callout analogy">
+    <div class="callout-title">就像 Word2Vec 的邏輯</div>
+    <p>你可能聽過 word embedding：「國王 - 男人 + 女人 ≈ 女王」。圖嵌入的邏輯類似——我們希望「墜落事件」和「高處作業違規法規」在向量空間中彼此接近，因為它們在圖譜中有強連結。</p>
+  </div>
+
+  <p>傳統的圖嵌入方法（如 TransE）把每個節點表示成空間中的<strong>一個點</strong>。這對普通知識庫夠用，但對法律推論有根本問題——我們稍後在 BoxE 那節詳細解釋。</p>
+</div>
+
+<!-- ─── SECTION 3 ─── -->
+<div class="section" id="s3">
+  <div class="section-num">Section 03</div>
+  <h2>核心概念：RGAT 關係圖注意力網路</h2>
+
+  <p>GNN（Graph Neural Network，圖神經網路）的核心思想是<strong>訊息傳遞（Message Passing）</strong>：每個節點更新自身特徵時，會聚合其鄰居的特徵。就像課堂討論：你的想法受到周圍同學的影響。</p>
+
+  <h3>為什麼需要「Relational」？</h3>
+
+  <p>傳統 GCN（Graph Convolutional Network）只知道兩個節點之間「有邊（1）」或「沒有邊（0）」，所有的邊共用同一個學習矩陣 <code>W</code>，也就是說，GCN 中只考慮一個種類的邊。</p>
+
+  <p>問題在於：在職安知識圖譜裡，<strong>邊是有種類的</strong>。如果我們不區分，模型會同時認同：</p>
+  <ul style="margin: 12px 0 12px 28px; line-height: 2;">
+    <li>(合理)「未正確架設施工架而從施工架落下」(違規項目)<code>[VIOLATES] (違反)</code>施工架相關規範 (法律)</li>
+    <li>(不合理)「未正確架設施工架從施工架落下」(違規項目)<code>[LEADS_TO] (違反)</code>施工架相關規範 (法律)</li>
+    <li>(合理)「作業員未正確架設施工架」(造成職災的原因)<code>[LEADS_TO] (造成)</code>「未正確架設施工架而從施工架落下」(違規項目)</li>
+    <li>* 備註：現在這裡是比較「同樣是 *違規項目 -> [邊] -> *法律」，但是 [邊] 種類不同的情況；如果是考慮「同一種邊」但「方向不正確」(或節點類型不同)，比如「*違規項目 -> [違反] *法律」跟「*法律 -> [違反] -> *違規項目」是否等價，這部分要在後面講解幾何空間嵌入的段落才會被解決。</li>
+  </ul>
+  <p>這顯然語意不通，卻是傳統 GCN 無法分辨的。</p>
+
+  <p>RGAT 的解法：<strong>替每一種關係 r 配置一個專屬的投影矩陣 <code>W_r</code></strong>，讓不同類型的關係把特徵投影到不同的特徵子空間。</p>
+
+  <div class="formula-block">
+    <span class="formula-label">RGAT Message</span>
+    <span class="comment">-- 傳統 GCN（所有關係共用同一個 W）：</span><br>
+    h_i ← σ(W · Σ h_j)    <span class="comment">← 不區分關係種類</span><br><br>
+    <span class="comment">-- RGAT（每種關係各自投影）：</span><br>
+    h_i ← σ(Σ_r Σ_{j∈N_i^r} <span class="hl">α_ij^r · W_r</span> · h_j)<br>
+    <span class="comment">           ↑                ↑</span><br>
+    <span class="comment">        注意力權重      關係專屬投影矩陣</span>
+  </div>
+
+  <h3>為什麼還需要「Attention」？</h3>
+
+  <div class="callout analogy">
+    <div class="callout-title">直觀類比：找同學討論</div>
+    <p>假設你要準備期末考，班上有10個同學都可以幫你。你不會把所有人的意見平均加總——你會<strong>找其中最強的那一兩個</strong>，給他們更高的權重，再取加權平均。這就是 Attention 機制的本質：<em>給予不同鄰居不同的參考價值（注意力權重）</em>。</p>
+  </div>
+
+  <p>注意力權重 <code>α_ij^r</code> 是學習出來的：模型透過訓練，自動學會哪些鄰居在特定關係下更重要。這讓訊息傳遞更有針對性，不至於把所有資訊一視同仁地模糊平均。</p>
+
+  <div class="callout teal">
+    <div class="callout-title">RGAT 在本研究的作用</div>
+    <p>RGAT 負責對整張職安知識圖譜做<strong>特徵學習</strong>，讓每個節點（職災事件、法規條文…）都得到一個高維向量表示，且此向量考慮了圖譜的結構資訊、關係的語意、以及鄰居的重要性。這些向量隨後被送入 BoxE 做幾何建模。</p>
+  </div>
+</div>
+
+<!-- ─── SECTION 4 ─── -->
+<div class="section" id="s4">
+  <div class="section-num">Section 04</div>
+  <h2>核心概念：BoxE 幾何空間嵌入</h2>
+
+  <p>這是整個研究中最關鍵的幾何直覺，請仔細理解這一節。</p>
+
+  <h3>傳統點嵌入的致命問題</h3>
+
+  <p>傳統方法（如 TransE）把每個實體表示成空間中的<strong>一個點</strong>。兩個節點的相關性 = 它們的向量距離。</p>
+
+  <p>在法律推論中，這有一個根本缺陷：</p>
+
+  <div class="callout warning">
+    <div class="callout-title">幾何擁擠與特徵坍縮問題</div>
+    <p>一條法規可能適用於數百種不同的職災事件（比如「高處作業」法規適用於各種墜落事件）。如果每個職災事件都是一個「點」，而它們都必須靠近同一個法規「點」，那麼這幾百個職災的點就會擠在一個法規點旁邊，形成一團混亂的<em>幾何擁擠</em>（geometric crowding）。節點特徵彼此覆蓋，最終<strong>坍縮</strong>成無法區分的一坨，失去個別語意。</p>
+  </div>
+
+  <h3>BoxE 的解法：把實體表示成「盒子」</h3>
+
+  <p>BoxE 的核心洞察：<strong>法律規範不是一個「點」，而是一個「空間區域」</strong>——它定義了一組行為規範的邊界，只有滿足特定要件的事件才會落入其範圍內。</p>
+
+  <div class="diagram-wrap">
+    <svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" width="100%">
+      <!-- LEFT: Point embedding -->
+      <text x="190" y="30" text-anchor="middle" font-family="Playfair Display,serif" font-size="14" fill="#0f1e3c" font-weight="600">傳統點嵌入（TransE）</text>
+
+      <!-- Law regulation point -->
+      <circle cx="190" cy="155" r="10" fill="#0d7377"/>
+      <text x="190" y="180" text-anchor="middle" font-family="Lora,serif" font-size="11" fill="#0d7377">職安法第18條</text>
+
+      <!-- Incident points crowded around -->
+      <circle cx="155" cy="125" r="5" fill="#b8893a" opacity="0.8"/>
+      <circle cx="175" cy="115" r="5" fill="#b8893a" opacity="0.8"/>
+      <circle cx="200" cy="118" r="5" fill="#b8893a" opacity="0.8"/>
+      <circle cx="220" cy="128" r="5" fill="#b8893a" opacity="0.8"/>
+      <circle cx="165" cy="140" r="5" fill="#b8893a" opacity="0.8"/>
+      <circle cx="215" cy="145" r="5" fill="#b8893a" opacity="0.8"/>
+      <circle cx="210" cy="110" r="5" fill="#b8893a" opacity="0.8"/>
+      <circle cx="170" cy="110" r="5" fill="#b8893a" opacity="0.8"/>
+      <text x="190" y="220" text-anchor="middle" font-family="Lora,serif" font-size="11" fill="#c0392b" font-style="italic">多個職災擠在一點旁 → 特徵坍縮</text>
+
+      <!-- Legend -->
+      <circle cx="110" cy="255" r="6" fill="#0d7377"/>
+      <text x="122" y="259" font-family="Lora,serif" font-size="11" fill="#555">法規節點</text>
+      <circle cx="200" cy="255" r="5" fill="#b8893a" opacity="0.8"/>
+      <text x="212" y="259" font-family="Lora,serif" font-size="11" fill="#555">職災事件</text>
+
+      <!-- DIVIDER -->
+      <line x1="380" y1="20" x2="380" y2="280" stroke="#e0dcd0" stroke-width="1" stroke-dasharray="4 3"/>
+
+      <!-- RIGHT: Box embedding -->
+      <text x="570" y="30" text-anchor="middle" font-family="Playfair Display,serif" font-size="14" fill="#0f1e3c" font-weight="600">BoxE 幾何盒子嵌入</text>
+
+      <!-- Large regulation box -->
+      <rect x="430" y="60" width="270" height="180" rx="10" fill="rgba(13,115,119,0.08)" stroke="#0d7377" stroke-width="2" stroke-dasharray="6 3"/>
+      <text x="565" y="85" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="11" fill="#0d7377">Box(職安法第18條)</text>
+
+      <!-- Inside incident boxes - fits -->
+      <rect x="460" y="105" width="70" height="40" rx="6" fill="rgba(184,137,58,0.15)" stroke="#b8893a" stroke-width="1.5"/>
+      <text x="495" y="120" text-anchor="middle" font-family="Lora,serif" font-size="10" fill="#7a5a1a">墜落事件A</text>
+      <text x="495" y="134" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#0d7377">✓ 涵攝</text>
+
+      <rect x="550" y="115" width="70" height="40" rx="6" fill="rgba(184,137,58,0.15)" stroke="#b8893a" stroke-width="1.5"/>
+      <text x="585" y="130" text-anchor="middle" font-family="Lora,serif" font-size="10" fill="#7a5a1a">施工架事故B</text>
+      <text x="585" y="144" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#0d7377">✓ 涵攝</text>
+
+      <rect x="460" y="165" width="70" height="40" rx="6" fill="rgba(184,137,58,0.15)" stroke="#b8893a" stroke-width="1.5"/>
+      <text x="495" y="180" text-anchor="middle" font-family="Lora,serif" font-size="10" fill="#7a5a1a">高處作業事故C</text>
+      <text x="495" y="194" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#0d7377">✓ 涵攝</text>
+
+      <!-- Outside incident box - doesn't fit -->
+      <rect x="640" y="100" width="70" height="40" rx="6" fill="rgba(192,57,43,0.08)" stroke="#c0392b" stroke-width="1.5"/>
+      <text x="675" y="115" text-anchor="middle" font-family="Lora,serif" font-size="10" fill="#8a2318">化學中毒事故D</text>
+      <text x="675" y="129" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#c0392b">✗ 不涵攝</text>
+    </svg>
+    <div class="diagram-caption"><strong>圖2：傳統點嵌入 vs. BoxE 盒子嵌入。</strong>左側：多個職災事件擠在法規點旁，特徵坍縮無法區分。右側：法規是大盒子，職災事件是小盒子；若小盒子落在大盒子內（相交體積 > 0），則代表該事件涉及此法規。</div>
+  </div>
+
+  <p>在 BoxE 中，每個實體被建模為一個 <strong>d 維超矩形（hyperrectangle）</strong>，由兩個向量決定：</p>
+
+  <div class="formula-block">
+    <span class="formula-label">BoxE</span>
+    Box(entity) = (C, W)<br>
+    <span class="comment">其中：</span><br>
+    <span class="hl">C</span> = 幾何中心向量 (center)    ∈ ℝ^d<br>
+    <span class="hl2">W</span> = 幾何寬度向量 (half-width)  ∈ ℝ^d   (每個維度都非負)<br><br>
+    <span class="comment">這個盒子在第 i 維的範圍是：[C_i - W_i, C_i + W_i]</span>
+  </div>
+
+  <p>法規 r 的盒子 <code>Box(r)</code> 代表「涵蓋某類違規行為的語意空間」；職災事件 c 的盒子 <code>Box(c)</code> 代表「此事故的特徵區間」。如果兩個盒子有充分的<strong>相交體積（intersection volume）</strong>，就代表這個職災事件真的落在法規的管轄範圍內。</p>
+
+  <div class="callout key">
+    <div class="callout-title">法律「涵攝」的幾何化</div>
+    <p>法律推論中有一個核心概念叫「<strong>涵攝（subsumption）</strong>」——判斷一個具體事實是否落入某條法律條文的構成要件之中。BoxE 把這個抽象的法律邏輯，轉化成了具體的<em>幾何相交體積計算</em>，讓電腦可以精確計算。</p>
+  </div>
+</div>
+
+<!-- ─── SECTION 5 ─── -->
+<div class="section" id="s5">
+  <div class="section-num">Section 05</div>
+  <h2>方法一：動態細粒度異質圖譜張量化</h2>
+
+  <p>在建立了知識圖譜和了解 RGAT/BoxE 之後，研究者面臨第一個工程問題：如何讓 RGAT 既能處理「多種關係」，又不損失節點的精細語意？</p>
+
+  <h3>從矩陣到張量</h3>
+
+  <p>傳統圖用<strong>鄰接矩陣</strong> <code>A[i][j] = 1</code> 表示「節點 i 和 j 之間有邊」。但這個矩陣無法記錄邊的<em>種類</em>。</p>
+
+  <div class="callout analogy">
+    <div class="callout-title">矩陣 vs. 張量的類比</div>
+    <p>鄰接矩陣就像一張「認識與否」的關係表（二維）。張量（Tensor）就是在這張表上多加一個維度：<code>A[i][j][k] = 1</code> 表示「節點 i 和 j 之間有第 k 種關係的邊」。三維張量就像是「針對每種關係分別建一張關係表，疊在一起」。</p>
+  </div>
+
+  <div class="formula-block">
+    <span class="formula-label">3D Tensor</span>
+    G = (V, E, R)<br>
+    A ∈ ℝ^{|V| × |V| × |R|}<br><br>
+    A[i][j][k] = 1 &nbsp;<span class="comment">← 節點 i 到 j 之間存在第 k 種關係</span><br><br>
+    <span class="comment">如：A[墜落事件_A][失足踩空][HAS_CAUSE] = 1</span><br>
+    <span class="comment">    A[失足踩空][未設安全網違規][LEADS_TO] = 1</span>
+  </div>
+
+  <h3>法理階層殘差連接：防止特徵平滑</h3>
+
+  <p>深層 GNN 有一個著名的工程風險叫<strong>特徵平滑（Feature Smoothing）</strong>：在多層訊息傳遞後，每個節點都聚合了越來越大範圍的鄰居資訊，導致所有節點的向量趨於同質化——「墜落事件」和「高處作業法規」的向量變得越來越像，失去了各自的獨特語意。</p>
+
+  <div class="callout analogy">
+    <div class="callout-title">類比：走廊的八卦</div>
+    <p>如果你把一個消息傳給10個人，再讓每個人把聽到的消息平均整合後傳出去，傳個3輪之後，所有人持有的「平均消息」會越來越趨同。這就是特徵平滑。</p>
+  </div>
+
+  <p>解法是<strong>殘差連接（Residual Connection）</strong>——你可能在 ResNet 課程中接觸過這個概念：在每層更新後，強制加回節點的原始特徵，確保「自己的根本身份」不被鄰居資訊淹沒：</p>
+
+  <div class="formula-block">
+    <span class="formula-label">RGAT + Residual</span>
+    h_i^(l+1) = σ(Σ_r Σ_{j∈N_i^r} α_ij^r · W_r · h_j^(l))<br>
+              <span class="hl">+ β · H_hier(i)</span>    <span class="comment">← 法規階層先驗向量（條、款、項的位階）</span><br>
+              <span class="hl2">+ γ · h_i^(0)</span>    <span class="comment">← 初始原子特徵的直接捷徑（抵抗被稀釋）</span>
+  </div>
+
+  <p>其中 <code>H_hier(i)</code> 是一個先驗向量，編碼了這個節點在法律體系中的「位階」（是法條本體？是條文下的某款？），強制模型在每層更新後都能重新錨定節點的法律地位，不至於把「第3條第2項第1款」和「第18條本文」混為一談。</p>
+
+  <h3>RGAT 的輸出到 BoxE 的銜接</h3>
+
+  <p>RGAT 最後一層的隱藏狀態 <code>h_i^(L)</code> 被兩個獨立的線性映射層轉換，分別生成 BoxE 所需的中心向量和寬度向量：</p>
+
+  <div class="formula-block">
+    <span class="formula-label">Feature Decoupling</span>
+    <span class="hl">C_i</span> = W_center · h_i^(L) + b_center    <span class="comment">← 盒子中心</span><br>
+    <span class="hl2">W_i</span> = Softplus(W_width · h_i^(L) + b_width)  <span class="comment">← 盒子寬度（非負）</span>
+  </div>
+
+  <p>這裡用 <strong>Softplus</strong>（一種平滑版的 ReLU）取代普通的線性映射，目的是確保寬度向量的每一維都是非負的——因為盒子的「寬度」不可能是負數。</p>
+</div>
+
+<!-- ─── SECTION 6 ─── -->
+<div class="section" id="s6">
+  <div class="section-num">Section 06</div>
+  <h2>方法二：基於幾何相交體積的約束子圖採樣</h2>
+
+  <p>有了每個節點的 BoxE 表示之後，下一步是：<strong>從整張圖中挑出與當前職災事件高度相關的子圖（subgraph）</strong>，作為送給 LLM 的證據。</p>
+
+  <h3>為什麼不用向量距離？</h3>
+
+  <p>傳統 RAG 的做法是計算查詢向量與資料庫中每個節點向量的距離，取最近的 K 個。這個方法對於法律推論有根本缺陷：</p>
+
+  <table class="compare-table">
+    <tr>
+      <th>方法</th>
+      <th>原理</th>
+      <th>問題</th>
+    </tr>
+    <tr>
+      <td>向量距離（傳統 RAG）</td>
+      <td>找「語意上最接近」的法規</td>
+      <td class="bad">「接近」≠「涵攝」。兩個語意相近的法條不一定互相適用。</td>
+    </tr>
+    <tr>
+      <td>幾何相交體積（本研究）</td>
+      <td>看職災事件的盒子是否落入法規的盒子內</td>
+      <td class="good">真正實現「法律涵攝」的幾何化表達，數學嚴格。</td>
+    </tr>
+  </table>
+
+  <h3>相交體積的計算</h3>
+
+  <p>兩個 d 維盒子 <code>Box(c)</code>（職災事件）和 <code>Box(r)</code>（法規）的相交體積，就是每一維上「重疊長度」的連乘積：</p>
+
+  <div class="formula-block">
+    <span class="formula-label">Intersection Volume</span>
+    Volume_inter(c, r) = Π_{i=1}^{d} max(0,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">← 連乘積（每維重疊量）</span><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;min(C_c,i+W_c,i, C_r,i+W_r,i)   <span class="comment">← 兩盒子右界的較小值</span><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-max(C_c,i-W_c,i, C_r,i-W_r,i))  <span class="comment">← 兩盒子左界的較大值</span>
+  </div>
+
+  <p>直觀理解：在一維情況下，如果兩條線段 <code>[2, 5]</code> 和 <code>[3, 7]</code> 有交集，交集長度 = min(5,7) - max(2,3) = 5 - 3 = 2。擴展到 d 維，就是每維交集長度的乘積。</p>
+
+  <h3>數值穩定化：從連乘到連加</h3>
+
+  <div class="callout warning">
+    <div class="callout-title">工程陷阱：維度坍縮（Dimension Collapse）</div>
+    <p>當 d = 256 時，如果有任意一個維度的重疊量為 0（哪怕只有 0.000001），整個連乘積就變成 <strong>0</strong>！這代表模型完全喪失了從這個子圖學習的機會，反向傳播時梯度消失，訓練失效。</p>
+  </div>
+
+  <p>解法：<strong>對數空間轉換</strong>。利用 <code>log(a·b·c) = log(a) + log(b) + log(c)</code>，把容易崩潰的連乘積轉成穩定的連加，並加上平滑因子 ε 防止 log(0)：</p>
+
+  <div class="formula-block">
+    <span class="formula-label">Log-Volume (Stable)</span>
+    logVolume~_inter(c, r) = <span class="hl">Σ_{i=1}^{d}</span> log(max(0, overlap_i) <span class="hl2">+ ε</span>)<br><br>
+    <span class="comment">連乘 → 連加：數值穩定，梯度不消失</span><br>
+    <span class="comment">+ ε（小正數）：防止 log(0) 的數值錯誤</span>
+  </div>
+
+  <h3>動態子圖切片</h3>
+
+  <p>有了對數相交體積之後，研究者設定一個動態閾值 θ，建立一個<strong>布林遮罩矩陣</strong> M，只保留「相交體積夠大」的節點連結：</p>
+
+  <div class="formula-block">
+    <span class="formula-label">Subgraph Masking</span>
+    M[i][j] = 1  <span class="comment">← 若 logVolume~_inter(i, j) > θ</span><br>
+    M[i][j] = 0  <span class="comment">← 否則（此連結在法律上不構成涵攝）</span><br><br>
+    G_sub = A ⊙ M     <span class="comment">← 張量 A 和遮罩矩陣的元素乘積 → 高置信度推論子圖</span>
+  </div>
+
+  <p>這樣我們就從整張職安知識圖譜中，精確切出了一個<strong>高置信度推論子圖 G_sub</strong>，只包含在幾何上與當前職災事件有法理涵攝關係的節點和邊。</p>
+</div>
+
+<!-- ─── SECTION 7 ─── -->
+<div class="section" id="s7">
+  <div class="section-num">Section 07</div>
+  <h2>方法三：拓樸同構之圖譜序列化提示生成</h2>
+
+  <p>現在我們有了高置信度子圖 G_sub，但遇到一個核心的<strong>跨模態（Cross-modal）挑戰</strong>：這個子圖是以 256 維的連續幾何向量形式存在的，而 LLM 只能閱讀<em>自然語言文字</em>。</p>
+
+  <div class="callout analogy">
+    <div class="callout-title">解析度類比</div>
+    <p>子圖是 144p 的幾何資訊，LLM 是 1080p 的語言理解機器。如果直接把向量硬塞進 LLM（用線性投影層做維度轉換 256 → 4096），資訊會嚴重失真——就像把一張 144p 影像硬拉成 1080p，只是在放大像素格，並沒有增加真實資訊。</p>
+  </div>
+
+  <p>本研究的解法是<strong>Graph Prompting</strong>：設計一個映射函數 φ，把幾何子圖轉換成結構化的自然語言序列，同時保留圖結構的拓樸資訊（即節點與邊的連接方式不變）。</p>
+
+  <h3>挑戰：無序走訪導致的雜訊</h3>
+
+  <p>最直覺的做法是隨機遊走（random walk）子圖，把走過的路徑翻譯成文字。但這會引發另一個問題：</p>
+  <ul class="step-list">
+    <li>子圖中可能有<strong>迴圈（cycle）</strong>，隨機遊走會反覆走過相同的節點，產生大量冗餘文字。</li>
+    <li>冗餘文字會把 LLM 的自注意力機制「稀釋」掉，讓模型無法聚焦在真正重要的法律推論鏈上。</li>
+    <li>如果子圖夠大，冗餘文字甚至會<strong>溢出 LLM 的上下文視窗（Context Window Overflow）</strong>，強制截斷。</li>
+  </ul>
+
+  <h3>解法：法理資訊熵導向的 Beam Search</h3>
+
+  <p>研究者把子圖序列化重構成一個<strong>路徑最佳化問題</strong>。對子圖中的每一條潛在推論路徑 P = (v1, r1, v2, …, rk-1, vk)，計算一個<strong>法理資訊熵分數 S(P)</strong>：</p>
+
+  <div class="formula-block">
+    <span class="formula-label">Path Score</span>
+    S(P) = Σ_{t=1}^{|P|-1} <span class="hl">Softmax(W_r^t)</span> · <span class="hl2">logVolume~_inter(v_t, v_{t+1})</span><br><br>
+    <span class="comment">           ↑                        ↑</span><br>
+    <span class="comment">      RGAT 學到的關係重要性     BoxE 計算出的法理涵攝強度</span>
+  </div>
+
+  <p>這個分數越高，代表這條路徑中每一步的「關係重要性」和「法律涵攝強度」都越大，是最有代表性的推論路徑。</p>
+
+  <p>然後使用<strong>Beam Search</strong>（一種保留 Top-K 候選的啟發式搜尋演算法）從子圖中抽取 Top-K 條最佳路徑，確保這些路徑是<strong>有向無環的（DAG）</strong>，不含冗餘迴圈。</p>
+
+  <div class="callout analogy">
+    <div class="callout-title">Beam Search 類比</div>
+    <p>想像你在一棵決策樹上找最佳路徑。Beam Search 不是全部展開（太慢），也不是每步只留最好的一條（貪心、容易錯過好路徑）。它每步保留最好的 K 條候選，像是同時維護 K 個「探索隊伍」，最終取最優解。</p>
+  </div>
+
+  <h3>翻譯成自然語言</h3>
+
+  <p>最佳路徑按照「事實認定 → 違法判斷 → 法規適用」的法理三段論結構，翻譯為三元組序列：</p>
+
+  <div class="formula-block">
+    <span class="formula-label">Graph → Prompt</span>
+    <span class="hl">職災事件</span> → [導致] → <span class="hl2">違規項目</span> → [違反] → <span class="hl3">法規名稱</span><br><br>
+    <span class="comment">例：</span><br>
+    作業員踩空事件 → [導致] → 高處作業無防護裝置 → [違反] → 職安法第18條第2項
+  </div>
+
+  <p>這樣就把原本隱性的 256 維 BoxE 幾何向量，精煉轉化為 LLM 可以直接讀取的<strong>顯性上下文約束</strong>，完全消除了跨模態適配器的失真問題，同時確保送給 LLM 的文字具備嚴格的法理因果結構。</p>
+</div>
+
+<!-- ─── SECTION 8 ─── -->
+<div class="section" id="s8">
+  <div class="section-num">Section 08</div>
+  <h2>方法四：幾何空間引導思維鏈（Geo-CoT）</h2>
+
+  <p>有了結構化的提示詞 T_prompt 之後，LLM 就可以開始生成法律推論。但一般的<strong>思維鏈（Chain-of-Thought, CoT）</strong>讓模型自由發散，在法律推論中極易發生「語意漂移」——模型可能半途跳到它在預訓練中見過的常見說法，而非嚴格依照子圖的法律邏輯推理。</p>
+
+  <h3>法律三段論的強制結構</h3>
+
+  <p>Geo-CoT 的核心：<strong>把古典邏輯的法律三段論（syllogism）映射為嚴格的自迴歸解碼約束</strong>，強制 LLM 的生成序列 Y 解耦成三個依序依賴的子序列：</p>
+
+  <div class="diagram-wrap">
+    <svg viewBox="0 0 760 220" xmlns="http://www.w3.org/2000/svg" width="100%">
+      <defs>
+        <marker id="arr2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </marker>
+      </defs>
+
+      <!-- Step 1 -->
+      <rect x="30" y="60" width="195" height="100" rx="10" fill="#f0f4ff" stroke="#4a6fa5" stroke-width="2"/>
+      <text x="127" y="88" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="11" fill="#4a6fa5">Y_fact</text>
+      <text x="127" y="107" text-anchor="middle" font-family="Playfair Display,serif" font-size="14" fill="#1a3060" font-weight="600">事實判定</text>
+      <text x="127" y="127" text-anchor="middle" font-family="Lora,serif" font-size="11" fill="#555">（法理小前提）</text>
+      <text x="127" y="145" text-anchor="middle" font-family="Lora,serif" font-size="10" fill="#777" font-style="italic">僅從 T_prompt 提取事實</text>
+
+      <!-- Arrow 1 -->
+      <line x1="227" y1="110" x2="280" y2="110" stroke="#888" stroke-width="1.5" marker-end="url(#arr2)"/>
+      <text x="254" y="102" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#888">必須完成</text>
+
+      <!-- Step 2 -->
+      <rect x="282" y="60" width="195" height="100" rx="10" fill="#fdf6e9" stroke="#b8893a" stroke-width="2"/>
+      <text x="379" y="88" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="11" fill="#b8893a">Y_bound</text>
+      <text x="379" y="107" text-anchor="middle" font-family="Playfair Display,serif" font-size="14" fill="#7a5a1a" font-weight="600">邊界測試</text>
+      <text x="379" y="127" text-anchor="middle" font-family="Lora,serif" font-size="11" fill="#555">（涵攝過程）</text>
+      <text x="379" y="145" text-anchor="middle" font-family="Lora,serif" font-size="10" fill="#777" font-style="italic">以文字重現 logVolume 邏輯</text>
+
+      <!-- Arrow 2 -->
+      <line x1="479" y1="110" x2="532" y2="110" stroke="#888" stroke-width="1.5" marker-end="url(#arr2)"/>
+      <text x="506" y="102" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#888">才能進入</text>
+
+      <!-- Step 3 -->
+      <rect x="534" y="60" width="195" height="100" rx="10" fill="#e8f5f5" stroke="#0d7377" stroke-width="2"/>
+      <text x="631" y="88" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="11" fill="#0d7377">Y_rule</text>
+      <text x="631" y="107" text-anchor="middle" font-family="Playfair Display,serif" font-size="14" fill="#0a4a4c" font-weight="600">法規結論</text>
+      <text x="631" y="127" text-anchor="middle" font-family="Lora,serif" font-size="11" fill="#555">（法理大前提）</text>
+      <text x="631" y="145" text-anchor="middle" font-family="Lora,serif" font-size="10" fill="#777" font-style="italic">只能輸出符合幾何的法條</text>
+
+      <!-- Blocking annotation -->
+      <text x="380" y="195" text-anchor="middle" font-family="Lora,serif" font-size="12" fill="#c0392b" font-style="italic">禁止在未完成 Y_bound 的狀態下直接猜測 Y_rule → 阻斷幻覺跳躍</text>
+    </svg>
+    <div class="diagram-caption"><strong>圖3：Geo-CoT 三段推理架構。</strong>強制 LLM 依序完成三個推理階段，每一步都必須錨定在幾何子圖的約束中。</div>
+  </div>
+
+  <p>在數學上，這相當於把全局條件機率 P(Y|X) 分解為受限的階段性邊際機率連乘：</p>
+
+  <div class="formula-block">
+    <span class="formula-label">Conditional Decomposition</span>
+    P(Y_law | X_event) = Π_{k∈{fact,bound,rule}} Π_{t=1}^{|Y_k|}<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="hl">P(y_{k,t} | y_{k,&lt;t}, Y_{&lt;k}, X_event, φ(G_sub))</span><br><br>
+    <span class="comment">意義：第 k 階段第 t 步的輸出，必須同時以：</span><br>
+    <span class="comment">  - 當前階段前面的輸出（y_{k,&lt;t}）</span><br>
+    <span class="comment">  - 前一階段的完整輸出（Y_{&lt;k}）</span><br>
+    <span class="comment">  - 原始事件描述（X_event）</span><br>
+    <span class="comment">  - 幾何子圖轉換的提示（φ(G_sub}）&nbsp;&nbsp;← 最關鍵的約束</span><br>
+    <span class="comment">  為條件——不得跳步。</span>
+  </div>
+
+  <div class="callout key">
+    <div class="callout-title">Geo-CoT 的精妙之處</div>
+    <p>一般 CoT 只是告訴 LLM「請逐步推理」，但<em>推理的每一步去哪個方向</em>完全由模型的先驗自由決定。Geo-CoT 則是在每一步都提供了幾何錨點：模型在做邊界測試（Y_bound）時，必須以自然語言<strong>重現</strong> logVolume~_inter(c, r) 的邏輯——也就是說，它必須論述「為什麼這個事件的特徵確實落在這條法規的構成要件空間內」，而不是在憑感覺說話。</p>
+  </div>
+</div>
+
+<!-- ─── SECTION 9 ─── -->
+<div class="section" id="s9">
+  <div class="section-num">Section 09</div>
+  <h2>方法五：解碼層幾何懲罰機制</h2>
+
+  <p>這是整套系統的最後一道防線，也是最直接的工程手段——<strong>直接干預 LLM 的輸出層</strong>。</p>
+
+  <h3>LLM 解碼的基本原理</h3>
+
+  <p>你需要知道 LLM 是如何生成文字的：</p>
+  <ol class="step-list">
+    <li>模型在每一步 t 對整個詞彙表 V 中的每個 token，計算一個原始分數（<strong>Logit</strong>），得到向量 <code>z_t ∈ ℝ^|V|</code>。</li>
+    <li>對 z_t 做 <strong>Softmax</strong> 轉換，得到每個 token 的輸出機率 P(y_t = i)。</li>
+    <li>從這個機率分布中<strong>採樣</strong>（或取最大值），決定下一個輸出的 token。</li>
+  </ol>
+  <p>問題：即使經過 Geo-CoT 的引導，LLM 在最終輸出具體法條名稱時，仍可能受到<strong>預訓練先驗</strong>的影響，對高頻的「安全牌」法條給出高 Logit，而輸出錯誤的法規。</p>
+
+  <h3>幾何懲罰項的設計</h3>
+
+  <p>本研究設計了一套「<strong>詞表—圖譜實體映射矩陣</strong>」，把每個法規名稱對應到詞彙表中的 token，然後動態計算懲罰項 Π：</p>
+
+  <div class="formula-block">
+    <span class="formula-label">Penalty Term</span>
+    Π_i = <br>
+      &nbsp;&nbsp;logVolume~_inter(c, r_i)  <span class="comment">← 若 token i 指向法規 r_i，且 r_i ∈ G_sub（幾何上有涵攝）</span><br>
+      &nbsp;&nbsp;-∞ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">← 若 token i 指向法規 r_i，但 r_i ∉ G_sub（無法理涵攝關係）</span><br>
+      &nbsp;&nbsp;0  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">← 非法規 token（如「的」、「第」…等語法詞彙）</span>
+  </div>
+
+  <p>然後將懲罰項加回原始 Logit，修正後的 Logit 為：</p>
+
+  <div class="formula-block">
+    <span class="formula-label">Adjusted Logit</span>
+    z̃_{t,i} = z_{t,i} + <span class="hl">α · Π_i</span><br><br>
+    P(y_t = i | y_{&lt;t}, X) = exp(z̃_{t,i}) / Σ_j exp(z̃_{t,j})
+  </div>
+
+  <div class="callout key">
+    <div class="callout-title">-∞ 懲罰的法學意義</div>
+    <p>對一個法規 token 施加 <strong>-∞</strong> 的懲罰，等同於在法學邏輯上行使「<strong>絕對否決權</strong>」。它的輸出機率直接變成 <code>exp(-∞) = 0</code>，讓模型在物理上<em>不可能</em>輸出這個法條——因為在幾何空間中，這條法規和當前職災事件根本沒有涵攝關係，所以就算模型再怎麼「想說」，也被封殺了。</p>
+  </div>
+
+  <div class="callout teal">
+    <div class="callout-title">為何只懲罰法規 token，不動語法詞彙？</div>
+    <p>懲罰機制僅針對映射到法規實體的 token 集合 V_law ⊂ V 做選擇性懲罰，而不影響「第」、「條」、「規定」等語法詞彙。這樣做是為了不干擾 LLM 生成流暢句子的能力，只在「哪條法律」這個關鍵選擇上施加幾何約束。</p>
+  </div>
+</div>
+
+<!-- ─── SECTION 10 ─── -->
+<div class="section" id="s10">
+  <div class="section-num">Section 10</div>
+  <h2>新研究計畫的系統架構與前期研究的實驗結果</h2>
+
+  <h3>新研究計畫的完整系統架構（五步驟管線）</h3>
+
+  <div class="diagram-wrap">
+    <svg viewBox="0 0 760 340" xmlns="http://www.w3.org/2000/svg" width="100%">
+      <defs>
+        <marker id="arr3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </marker>
+      </defs>
+
+      <!-- Input -->
+      <rect x="20" y="140" width="110" height="60" rx="8" fill="#f5f0e5" stroke="#d0c9bb" stroke-width="1.5"/>
+      <text x="75" y="163" text-anchor="middle" font-family="Lora,serif" font-size="12" fill="#444" font-weight="600">職災事故</text>
+      <text x="75" y="180" text-anchor="middle" font-family="Lora,serif" font-size="11" fill="#777">情境描述</text>
+      <text x="75" y="195" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#aaa">X_event</text>
+
+      <line x1="132" y1="170" x2="148" y2="170" stroke="#888" stroke-width="1.5" marker-end="url(#arr3)"/>
+
+      <!-- Step 1: RGAT Tensor -->
+      <rect x="150" y="100" width="110" height="140" rx="8" fill="#eef2ff" stroke="#4a6fa5" stroke-width="1.5"/>
+      <text x="205" y="128" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#4a6fa5">Step 1</text>
+      <text x="205" y="148" text-anchor="middle" font-family="Playfair Display,serif" font-size="12" fill="#1a3060" font-weight="600">RGAT</text>
+      <text x="205" y="164" text-anchor="middle" font-family="Playfair Display,serif" font-size="12" fill="#1a3060" font-weight="600">張量化</text>
+      <text x="205" y="185" text-anchor="middle" font-family="Lora,serif" font-size="10" fill="#555">異質圖特徵學習</text>
+      <text x="205" y="200" text-anchor="middle" font-family="Lora,serif" font-size="10" fill="#555">殘差連接</text>
+      <text x="205" y="218" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#4a6fa5">→ 節點向量 h</text>
+
+      <line x1="262" y1="170" x2="278" y2="170" stroke="#888" stroke-width="1.5" marker-end="url(#arr3)"/>
+
+      <!-- Step 2: BoxE -->
+      <rect x="280" y="100" width="110" height="140" rx="8" fill="#fdf6e9" stroke="#b8893a" stroke-width="1.5"/>
+      <text x="335" y="128" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#b8893a">Step 2</text>
+      <text x="335" y="148" text-anchor="middle" font-family="Playfair Display,serif" font-size="12" fill="#7a5a1a" font-weight="600">BoxE</text>
+      <text x="335" y="164" text-anchor="middle" font-family="Playfair Display,serif" font-size="12" fill="#7a5a1a" font-weight="600">幾何相交</text>
+      <text x="335" y="185" text-anchor="middle" font-family="Lora,serif" font-size="10" fill="#555">中心 + 寬度向量</text>
+      <text x="335" y="200" text-anchor="middle" font-family="Lora,serif" font-size="10" fill="#555">相交體積計算</text>
+      <text x="335" y="218" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#b8893a">→ G_sub 子圖</text>
+
+      <line x1="392" y1="170" x2="408" y2="170" stroke="#888" stroke-width="1.5" marker-end="url(#arr3)"/>
+
+      <!-- Step 3: Serialization -->
+      <rect x="410" y="100" width="110" height="140" rx="8" fill="#e8f5f5" stroke="#0d7377" stroke-width="1.5"/>
+      <text x="465" y="128" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#0d7377">Step 3</text>
+      <text x="465" y="148" text-anchor="middle" font-family="Playfair Display,serif" font-size="12" fill="#0a4a4c" font-weight="600">圖譜</text>
+      <text x="465" y="164" text-anchor="middle" font-family="Playfair Display,serif" font-size="12" fill="#0a4a4c" font-weight="600">序列化</text>
+      <text x="465" y="185" text-anchor="middle" font-family="Lora,serif" font-size="10" fill="#555">Beam Search 路徑</text>
+      <text x="465" y="200" text-anchor="middle" font-family="Lora,serif" font-size="10" fill="#555">Graph Prompting</text>
+      <text x="465" y="218" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#0d7377">→ T_prompt 文字</text>
+
+      <line x1="522" y1="170" x2="538" y2="170" stroke="#888" stroke-width="1.5" marker-end="url(#arr3)"/>
+
+      <!-- Step 4+5: LLM -->
+      <rect x="540" y="80" width="195" height="180" rx="8" fill="#fff5f0" stroke="#c0392b" stroke-width="1.5"/>
+      <text x="637" y="108" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#c0392b">Step 4 + 5</text>
+      <text x="637" y="128" text-anchor="middle" font-family="Playfair Display,serif" font-size="13" fill="#7a1a0a" font-weight="600">LLM 受約束生成</text>
+      <text x="637" y="152" text-anchor="middle" font-family="Lora,serif" font-size="11" fill="#555">Geo-CoT</text>
+      <text x="637" y="168" text-anchor="middle" font-family="Lora,serif" font-size="10" fill="#777">Y_fact → Y_bound → Y_rule</text>
+      <line x1="570" y1="185" x2="700" y2="185" stroke="#e0d8d0" stroke-width="0.5"/>
+      <text x="637" y="205" text-anchor="middle" font-family="Lora,serif" font-size="11" fill="#555">解碼層懲罰</text>
+      <text x="637" y="221" text-anchor="middle" font-family="Lora,serif" font-size="10" fill="#777">無涵攝法規 → Logit = -∞</text>
+      <text x="637" y="244" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#c0392b">→ 具體法條 + 理由</text>
+
+      <!-- Input labels at bottom -->
+      <text x="380" y="305" text-anchor="middle" font-family="Lora,serif" font-size="12" fill="#888" font-style="italic">整套管線的核心思想：在每一個環節都用嚴格的幾何數學約束 LLM 的生成</text>
+    </svg>
+    <div class="diagram-caption"><strong>圖4：完整五步驟研究管線。</strong>從職災事故描述輸入，經過張量化圖學習、幾何相交子圖採樣、序列化提示生成，到最終受幾何約束的 LLM 推論輸出。</div>
+  </div>
+
+  <h3>前期研究的實驗結果：Hit@K 指標</h3>
+
+  <p><strong>Hit@K</strong> 是衡量知識圖譜補全任務的標準指標，或更直覺地，給定職災情境 看模型能不能找到官方案例庫中專家認為這個職災涉及的法律名稱：在測試案例中，正確答案出現在模型推薦列表 Top-K 位置的比例。</p>
+
+  <div class="result-grid">
+    <div class="result-card">
+      <div class="model">RGCN + RotatE</div>
+      <div class="metric" style="font-size:22px; color:#888;">75.28%</div>
+      <div class="metric-label">Hit@10</div>
+      <div style="margin-top:10px; font-size:11px; color:#aaa; font-style:italic;">傳統同質圖 + 旋轉嵌入</div>
+    </div>
+    <div class="result-card">
+      <div class="model">RGAT + RotatE</div>
+      <div class="metric" style="font-size:22px; color: #4a6fa5;">74.73%</div>
+      <div class="metric-label">Hit@1</div>
+      <div class="metric" style="font-size:18px; color:#4a6fa5; margin-top:8px;">97.83%</div>
+      <div class="metric-label">Hit@3</div>
+      <div style="margin-top:8px; font-size:11px; color:#aaa; font-style:italic;">異質圖 + 旋轉嵌入</div>
+    </div>
+    <div class="result-card winner">
+      <div class="winner-badge">本研究</div>
+      <div class="model">RGAT + BoxE</div>
+      <div class="metric">95.92%</div>
+      <div class="metric-label">Hit@1</div>
+      <div class="metric" style="margin-top:8px;">99.46%</div>
+      <div class="metric-label">Hit@3</div>
+      <div style="margin-top:8px; font-size:11px; color:#7a5a1a; font-style:italic;">異質圖 + 幾何盒子嵌入</div>
+    </div>
+  </div>
+
+  <p>在 Hit@1 指標上，本研究的 RGAT+BoxE 達到 <strong class="accent">95.92%</strong>，相比 RGAT+RotatE 的 74.73% 提升了 <strong>21.19 個百分點</strong>——在一個模型直接「猜對」的任務上，這是非常顯著的進步。</p>
+
+  <div class="callout teal">
+    <div class="callout-title">為什麼 BoxE 遠勝 RotatE？</div>
+    <p>RotatE 同樣是知識圖譜嵌入方法，但它把關係建模為旋轉操作（點對點）。在多對多的法律涵攝關係中（一條法規適用於多種職災），旋轉嵌入同樣面臨幾何擁擠問題。BoxE 的盒子設計天然支援「一對多涵攝」，每個職災事件的小盒子都可以落在同一個法規大盒子內，互不干擾，從而有效解決了特徵坍縮問題。</p>
+  </div>
+
+  <h3>研究的理論貢獻總結</h3>
+
+  <div class="callout key">
+    <div class="callout-title">五層幾何約束的設計邏輯</div>
+    <p>這個研究的獨特性在於：它<em>從資料表示到模型輸出的每一個環節</em>，都引入了幾何約束——張量化圖譜（保留關係種類）→ 殘差連接（保留法律位階）→ BoxE 相交體積（實現法律涵攝）→ Graph Prompting（保留拓樸資訊）→ Geo-CoT（強制三段論）→ 解碼懲罰（封殺無效法條）。這種<strong>端到端的幾何約束設計</strong>，讓整套系統在任何一個環節都難以滑入「頻率偏差」的陷阱。</p>
+  </div>
+</div>
+
+</div><!-- end content-wrap -->
+
+<!-- ═══════════════ FOOTER ═══════════════ -->
+<div class="footer">
+  <div>研究方法導讀報告 · 國立政治大學人工智慧應用學士學位學程 · 2026</div>
+  <div style="margin-top:8px; opacity:0.7;">撰文：黃旭寬、Sonnet 4.6 — 知識圖譜驅動之約束生成：利用幾何空間嵌入消弭法規推論幻覺之研究 · 校內115年AI跨域研究構想補助計畫 入選</div>
+</div>
+
+<script>
+  document.querySelectorAll('.toc a').forEach(a => {
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      const target = document.querySelector(a.getAttribute('href'));
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+</script>
+</body>
+</html>
